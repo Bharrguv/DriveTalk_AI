@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DriveTalk AI – Voice Receptionist for Auto Dealerships</title>
+  <meta name="description" content="DriveTalk AI is a local-first AI voice receptionist that answers calls, checks service slots, books appointments, and escalates edge cases for auto dealerships." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0e12;
+      --surface: #14181f;
+      --surface-2: #1a1f28;
+      --border: #2a3140;
+      --text: #e8eaed;
+      --text-muted: #9aa3b2;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.15);
+      --green: #22c55e;
+      --radius: 12px;
+      --font: "DM Sans", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1100px, 92%); margin: 0 auto; }
+
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(12, 14, 18, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .inner {
+      display: flex; align-items: center; justify-content: space-between; height: 64px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.05rem; }
+    .logo-mark {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      display: grid; place-items: center; font-size: 14px;
+    }
+    .nav-links { display: flex; align-items: center; gap: 28px; font-size: 0.92rem; color: var(--text-muted); }
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: 9px; font-weight: 500; font-size: 0.92rem;
+      border: 1px solid transparent; cursor: pointer; transition: 0.15s ease;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-ghost { background: transparent; border-color: var(--border); color: var(--text); }
+    .btn-ghost:hover { background: var(--surface); }
+
+    .hero { padding: 80px 0 48px; text-align: center; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: 999px;
+      background: var(--accent-soft); color: #93c5fd;
+      font-size: 0.8rem; font-weight: 500; margin-bottom: 22px;
+    }
+    .badge-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .hero h1 {
+      font-size: clamp(2.1rem, 5vw, 3.1rem); font-weight: 700;
+      letter-spacing: -0.03em; line-height: 1.15;
+      max-width: 720px; margin: 0 auto 18px;
+    }
+    .hero h1 span {
+      background: linear-gradient(90deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-sub { color: var(--text-muted); font-size: 1.1rem; max-width: 540px; margin: 0 auto 32px; }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+
+    .demo-card, .try-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    .demo-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px; background: var(--surface-2); border-bottom: 1px solid var(--border);
+    }
+    .traffic { display: flex; gap: 7px; }
+    .traffic span { width: 11px; height: 11px; border-radius: 50%; }
+    .traffic .r { background: #ff5f57; }
+    .traffic .y { background: #febc2e; }
+    .traffic .g { background: #28c840; }
+    .demo-title { font-size: 0.85rem; color: var(--text-muted); font-family: var(--mono); }
+
+    .demo-section { padding: 10px 0 40px; }
+    .chat-window {
+      height: 360px; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .msg {
+      max-width: 78%; padding: 12px 15px; border-radius: 14px;
+      font-size: 0.95rem; line-height: 1.5;
+      opacity: 0; transform: translateY(10px);
+      animation: msgIn 0.35s ease forwards;
+    }
+    @keyframes msgIn { to { opacity: 1; transform: translateY(0); } }
+    .msg.agent {
+      align-self: flex-start; background: var(--surface-2);
+      border: 1px solid var(--border); border-bottom-left-radius: 4px;
+    }
+    .msg.user {
+      align-self: flex-end; background: var(--accent); color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg .label {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.03em;
+      text-transform: uppercase; margin-bottom: 4px; opacity: 0.7;
+    }
+    .msg.agent .label { color: #93c5fd; }
+    .msg.user .label { color: rgba(255,255,255,0.75); }
+
+    .typing {
+      align-self: flex-start; display: flex; gap: 5px; padding: 14px 16px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 14px; border-bottom-left-radius: 4px;
+    }
+    .typing span {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted);
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounce {
+      0%,60%,100% { transform: translateY(0); opacity: 0.5; }
+      30% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    .demo-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 18px; border-top: 1px solid var(--border);
+      background: var(--surface-2); font-size: 0.8rem; color: var(--text-muted);
+    }
+    .live-pill { display: inline-flex; align-items: center; gap: 6px; color: var(--green); }
+    .live-pill::before {
+      content: ""; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); animation: pulse 1.6s infinite;
+    }
+
+    .try-section { padding: 20px 0 70px; }
+    .section-label {
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+    }
+    .section h2 {
+      font-size: clamp(1.5rem, 3vw, 1.9rem); font-weight: 700;
+      letter-spacing: -0.02em; margin-bottom: 8px;
+    }
+    .section-sub { color: var(--text-muted); max-width: 520px; margin-bottom: 28px; }
+
+    .try-card { max-width: 720px; margin: 0 auto; }
+    .try-chat {
+      height: 340px; overflow-y: auto; padding: 18px 16px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .try-input-row {
+      display: flex; gap: 10px; padding: 14px 16px;
+      border-top: 1px solid var(--border); background: var(--surface-2);
+      align-items: center;
+    }
+    .try-input-row input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px; color: var(--text);
+      font-family: var(--font); font-size: 0.95rem; outline: none;
+    }
+    .try-input-row input:focus { border-color: var(--accent); }
+    .try-input-row input::placeholder { color: var(--text-muted); }
+    .mic-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); font-size: 1.2rem; cursor: pointer;
+      display: grid; place-items: center; transition: 0.15s ease;
+    }
+    .mic-btn:hover { border-color: var(--accent); }
+    .mic-btn.listening {
+      background: #dc2626; border-color: #dc2626; color: #fff;
+      animation: pulse 1.2s infinite;
+    }
+
+    .status-line {
+      font-size: 0.78rem; color: var(--text-muted);
+      padding: 0 16px 10px; background: var(--surface-2);
+    }
+    .status-line.ok { color: var(--green); }
+    .status-line.err { color: #f87171; }
+
+    .section { padding: 60px 0; }
+    .grid-3 {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;
+    }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px; transition: border-color 0.15s;
+    }
+    .card:hover { border-color: #3d4a5c; }
+    .card-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: grid; place-items: center; font-size: 1.1rem;
+      margin-bottom: 12px; background: var(--accent-soft);
+    }
+    .card h3 { font-size: 1.02rem; font-weight: 600; margin-bottom: 6px; }
+    .card p { font-size: 0.9rem; color: var(--text-muted); }
+
+    .steps { display: grid; gap: 14px; }
+    .step {
+      display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+    }
+    .step-num {
+      width: 34px; height: 34px; border-radius: 8px; background: var(--accent-soft);
+      color: #93c5fd; display: grid; place-items: center;
+      font-weight: 600; font-size: 0.88rem; font-family: var(--mono);
+    }
+    .step h3 { font-size: 0.98rem; margin-bottom: 3px; }
+    .step p { font-size: 0.88rem; color: var(--text-muted); }
+
+    .cta-box {
+      background: linear-gradient(145deg, #151b26, #0f131a);
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 44px 28px; text-align: center;
+    }
+    .cta-box h2 { font-size: 1.55rem; margin-bottom: 8px; }
+    .cta-box p { color: var(--text-muted); margin-bottom: 20px; }
+    .code-block {
+      display: inline-block; background: #0a0c10; border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 18px; font-family: var(--mono);
+      font-size: 0.82rem; color: #a5b4c8; text-align: left; margin-bottom: 18px;
+    }
+    .code-block span { color: #7dd3fc; }
+
+    footer {
+      border-top: 1px solid var(--border); padding: 26px 0; margin-top: 30px;
+    }
+    footer .inner {
+      display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: 14px;
+      font-size: 0.88rem; color: var(--text-muted);
+    }
+    footer a { color: #93c5fd; }
+    footer a:hover { color: #bfdbfe; }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .chat-window, .try-chat { height: 300px; }
+      .msg { max-width: 90%; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container inner">
+      <a href="#" class="logo">
+        <div class="logo-mark">🚗</div>
+        DriveTalk AI
+      </a>
+      <div class="nav-links">
+        <a href="#demo">Demo</a>
+        <a href="#try">Try it</a>
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="https://github.com/YOUR_USERNAME/DriveTalk-AI" class="btn btn-ghost" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero container">
+    <div class="badge"><span class="badge-dot"></span> Local-first · LangGraph · Open source</div>
+    <h1>AI voice receptionist that <span>actually books</span> service appointments</h1>
+    <p class="hero-sub">
+      DriveTalk answers the call, checks real slots, books or reschedules, and escalates edge cases — built for auto dealerships.
+    </p>
+    <div class="hero-actions">
+      <a href="#try" class="btn btn-primary">Try it live</a>
+      <a href="https://github.com/YOUR_USERNAME/DriveTalk-AI" class="btn btn-ghost" target="_blank" rel="noopener">View on GitHub →</a>
+    </div>
+  </header>
+
+  <section class="demo-section container" id="demo">
+    <div class="section-label">Product demo</div>
+    <h2 style="margin-bottom:16px;font-size:1.4rem;">Watch a real booking conversation</h2>
+    <div class="demo-card">
+      <div class="demo-header">
+        <div class="traffic"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+        <div class="demo-title">DriveTalk · Apex Motors Service</div>
+      </div>
+      <div class="chat-window" id="chat"></div>
+      <div class="demo-footer">
+        <span class="live-pill">Auto-playing simulation</span>
+        <span>Mock appointment API</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="try-section container section" id="try">
+    <div class="section-label">Interactive</div>
+    <h2>Try DriveTalk yourself</h2>
+    <p class="section-sub">
+      Talk to the live agent. Ask for an oil change, check availability, or book an appointment.
+      Backend must be running (instructions below).
+    </p>
+
+    <div class="try-card">
+      <div class="demo-header">
+        <div class="traffic"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+        <div class="demo-title">Live agent · connected to backend</div>
+      </div>
+      <div class="try-chat" id="tryChat"></div>
+      <div class="status-line" id="apiStatus">Checking backend…</div>
+      <div class="try-input-row">
+        <button class="mic-btn" id="micBtn" title="Hold or click to speak (Chrome/Edge)">🎤</button>
+        <input id="userInput" type="text" placeholder="Type or click the mic to speak…" autocomplete="off" />
+        <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section container" id="features">
+    <div class="section-label">Capabilities</div>
+    <h2>Built for real dealership calls</h2>
+    <p class="section-sub">Purpose-built flows for service scheduling with intelligent handoff.</p>
+    <div class="grid-3">
+      <div class="card"><div class="card-icon">📅</div><h3>Checks real slots</h3><p>Queries available service bays and times through tools before offering any appointment.</p></div>
+      <div class="card"><div class="card-icon">✅</div><h3>Books & reschedules</h3><p>Collects name, phone, vehicle and service type, then confirms with a real confirmation code.</p></div>
+      <div class="card"><div class="card-icon">↗️</div><h3>Escalates edge cases</h3><p>Angry callers, complex diagnosis, warranty disputes — automatically hands off to a human.</p></div>
+      <div class="card"><div class="card-icon">🎙️</div><h3>Voice-ready</h3><p>TTS pipeline included. Optional mic loop for full local voice conversations.</p></div>
+      <div class="card"><div class="card-icon">🧩</div><h3>LangGraph tools</h3><p>Clean tool-calling agent. Swap the mock API for CDK, Xtime or any DMS later.</p></div>
+      <div class="card"><div class="card-icon">💻</div><h3>Runs locally</h3><p>No forced cloud. Install, add a Groq/OpenAI key, and run on your machine.</p></div>
+    </div>
+  </section>
+
+  <section class="section container" id="how">
+    <div class="section-label">Architecture</div>
+    <h2>How DriveTalk works</h2>
+    <p class="section-sub">Simple pipeline you can extend.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div><h3>Caller speaks or types</h3><p>Optional Whisper STT or direct text. State is kept in LangGraph.</p></div></div>
+      <div class="step"><div class="step-num">2</div><div><h3>Agent decides which tool to use</h3><p>check_available_slots · book_service_appointment · reschedule · escalate_to_human</p></div></div>
+      <div class="step"><div class="step-num">3</div><div><h3>Mock (or real) API responds</h3><p>In-memory scheduler for demos. Replace with your DMS in production.</p></div></div>
+      <div class="step"><div class="step-num">4</div><div><h3>Natural reply + TTS</h3><p>Short, voice-friendly answers played through the edge-tts pipeline.</p></div></div>
+    </div>
+  </section>
+
+  <section class="section container">
+    <div class="cta-box">
+      <h2>Run the full stack locally</h2>
+      <p>Backend (FastAPI) + this website + LangGraph agent</p>
+      <div class="code-block">
+        pip install -r requirements.txt<br>
+        <span>uvicorn</span> src.api:app --reload --port 8000<br>
+        <span># then open website/index.html</span>
+      </div>
+      <div>
+        <a href="https://github.com/YOUR_USERNAME/DriveTalk-AI" class="btn btn-primary" target="_blank" rel="noopener">Open GitHub repository</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container inner">
+      <div>DriveTalk AI · AI voice receptionist for auto dealerships</div>
+      <div>
+        <a href="https://github.com/YOUR_USERNAME/DriveTalk-AI" target="_blank" rel="noopener">GitHub</a>
+        &nbsp;·&nbsp; MIT License
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    
+
+    //deployed api
+    const API_BASE = "http://127.0.0.1:8000";
+
+    
+    const conversation = [
+      { role: "agent", text: "Thank you for calling Apex Motors service. This is DriveTalk, your AI receptionist. How can I help you today?" },
+      { role: "user",  text: "Hi, I need an oil change for my 2022 Honda Civic." },
+      { role: "agent", text: "Happy to help with an oil change. I have openings tomorrow at 9:00 AM, 11:30 AM, and 2:00 PM. Which time works best?" },
+      { role: "user",  text: "Tomorrow at 11:30 is perfect. Name is Sarah Chen, phone 555-0192." },
+      { role: "agent", text: "Confirmed! I've booked your oil change for tomorrow at 11:30 AM under Sarah Chen. Confirmation code: APT-48291. You'll get a reminder the day before. Anything else I can help with?" },
+      { role: "user",  text: "That's all, thanks!" },
+      { role: "agent", text: "You're welcome, Sarah. Drive safe — see you tomorrow at 11:30." }
+    ];
+
+    const chat = document.getElementById("chat");
+    let index = 0;
+
+    function addTyping(target) {
+      const el = document.createElement("div");
+      el.className = "typing";
+      el.id = "typing";
+      el.innerHTML = "<span></span><span></span><span></span>";
+      target.appendChild(el);
+      target.scrollTop = target.scrollHeight;
+    }
+    function removeTyping() {
+      const t = document.getElementById("typing");
+      if (t) t.remove();
+    }
+    function addMessage(target, msg, animate = true) {
+      const el = document.createElement("div");
+      el.className = `msg ${msg.role === "assistant" ? "agent" : msg.role}`;
+      if (!animate) { el.style.animation = "none"; el.style.opacity = "1"; el.style.transform = "none"; }
+      const label = (msg.role === "agent" || msg.role === "assistant") ? "DriveTalk" : "You";
+      el.innerHTML = `<div class="label">${label}</div>${msg.text || msg.content || ""}`;
+      target.appendChild(el);
+      target.scrollTop = target.scrollHeight;
+    }
+
+    function playNext() {
+      if (index >= conversation.length) {
+        setTimeout(() => { chat.innerHTML = ""; index = 0; playNext(); }, 4500);
+        return;
+      }
+      const msg = conversation[index];
+      if (msg.role === "agent") {
+        addTyping(chat);
+        setTimeout(() => {
+          removeTyping();
+          addMessage(chat, msg);
+          index++;
+          setTimeout(playNext, 900);
+        }, 1000 + Math.random() * 500);
+      } else {
+        setTimeout(() => {
+          addMessage(chat, msg);
+          index++;
+          setTimeout(playNext, 650);
+        }, 500);
+      }
+    }
+    setTimeout(playNext, 700);
+
+    
+    const tryChat = document.getElementById("tryChat");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const apiStatus = document.getElementById("apiStatus");
+    let history = [];
+    let busy = false;
+
+    addMessage(tryChat, { role: "agent", text: "Hi! I'm DriveTalk. Ask me to check slots or book a service appointment." }, false);
+
+    async function checkHealth() {
+      try {
+        const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(4000) });
+        if (!r.ok) throw new Error("not ok");
+        const data = await r.json();
+        apiStatus.textContent = `Backend online · ${data.dealership} · ${data.provider}`;
+        apiStatus.className = "status-line ok";
+        return true;
+      } catch {
+        apiStatus.textContent = "Backend offline — run: uvicorn src.api:app --reload --port 8000";
+        apiStatus.className = "status-line err";
+        return false;
+      }
+    }
+    checkHealth();
+    setInterval(checkHealth, 15000);
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text || busy) return;
+
+      busy = true;
+      sendBtn.disabled = true;
+      userInput.value = "";
+      addMessage(tryChat, { role: "user", text });
+      addTyping(tryChat);
+
+      try {
+        const r = await fetch(`${API_BASE}/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, history }),
+        });
+        removeTyping();
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          addMessage(tryChat, { role: "agent", text: `Error: ${err.detail || r.statusText}` });
+        } else {
+          const data = await r.json();
+          history = data.history || [];
+          addMessage(tryChat, { role: "agent", text: data.reply });
+        }
+      } catch (e) {
+        removeTyping();
+        addMessage(tryChat, {
+          role: "agent",
+          text: "Can't reach the backend. Make sure it's running on port 8000."
+        });
+        checkHealth();
+      }
+
+      busy = false;
+      sendBtn.disabled = false;
+      userInput.focus();
+    }
+
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    
+    const micBtn = document.getElementById("micBtn");
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let listening = false;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        listening = true;
+        micBtn.classList.add("listening");
+        micBtn.title = "Listening… click to stop";
+      };
+      recognition.onend = () => {
+        listening = false;
+        micBtn.classList.remove("listening");
+        micBtn.title = "Click to speak (Chrome/Edge)";
+      };
+      recognition.onerror = (e) => {
+        listening = false;
+        micBtn.classList.remove("listening");
+        if (e.error !== "aborted") {
+          addMessage(tryChat, { role: "agent", text: `Mic error: ${e.error}. Try Chrome/Edge and allow microphone.` });
+        }
+      };
+      recognition.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        if (text) {
+          userInput.value = text;
+          sendMessage();
+        }
+      };
+
+      micBtn.addEventListener("click", () => {
+        if (!recognition) return;
+        if (listening) {
+          recognition.stop();
+        } else {
+          try {
+            recognition.start();
+          } catch (e) {
+            
+          }
+        }
+      });
+    } else {
+      micBtn.title = "Speech recognition not supported in this browser (use Chrome/Edge)";
+      micBtn.style.opacity = "0.4";
+      micBtn.disabled = true;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Core
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-groq>=0.2.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# TTS pipeline (Vocalize-style free high-quality voices)
+edge-tts>=6.1.0
+pygame>=2.5.0          # playback
+
+# Optional voice loop (STT)
+SpeechRecognition>=3.10.0
+openai-whisper>=20231117
+sounddevice>=0.4.6
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Utils
+rich>=13.0.0
+typer>=0.12.0
+
+# Web API (for website "Try it" feature)
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
